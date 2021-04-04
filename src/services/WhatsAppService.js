@@ -1,4 +1,5 @@
 import venom from 'venom-bot';
+import lodash from 'lodash';
 import DialogFlowService from './DialogFlowService.js';
 import VTEXService from './VTEXService.js';
 class WhatsAppService {
@@ -42,7 +43,7 @@ class WhatsAppService {
         if(product_name !== '' && product_category === ''){
             VTEXService.start();
             const result = await VTEXService.searchCategoriesByProduct(product_name);
-
+            console.log(result);
             await DialogFlowService.detectIntent({body: JSON.stringify(result)});
 
             let messageReturn = 'Em qual categoria você acha que seu produto se encaixa? \n';
@@ -56,9 +57,29 @@ class WhatsAppService {
                 const intent = await DialogFlowService.detectIntent({body: '1'});
                 return intent.fulfillmentMessages;
             }
-        } else {
+        } else if (this.verifyProductComplete(intent)) {
+            
             return intent.fulfillmentMessages;
         }
+        else {
+            return intent.fulfillmentMessages;
+        }
+    }
+
+    verifyProductComplete(intent) {
+        let complete = true;
+        lodash.map(intent.parameters.fields, (field) => {
+            if(field.stringValue === ''){
+                complete = false;
+            }
+        })
+        // for (const field of intent.parameters.fields) {
+        //     if(field.stringValue === ''){
+        //         complete = false;
+        //     }
+        // }
+
+        return complete;
     }
     
 }
