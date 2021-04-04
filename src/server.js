@@ -16,4 +16,4 @@ app.listen(3333, () => {
   console.log('🚀️ Server started on port 3333');
 });
 
-// $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\Rafael\hacka-bot\src\config\dialoflow.json"
+// $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\Rafael\hacka-bot\src\config\dialogflow.json"
