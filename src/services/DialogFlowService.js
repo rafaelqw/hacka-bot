@@ -1,33 +1,26 @@
 import DialogFlow from '@google-cloud/dialogflow';
 
 class DialogFlowService {
-    async detectedIntent(message){
-        const projectId = 'hackbot-uy9p';
-        // A unique identifier for the given session
-        const sessionId = message.sender.id;// Numero do celular da pessoa
+    async start(sessionId){
+        this.projectId = process.env.DIALOG_FLOW_PROJECT_ID;
+        this.sessionClient = new DialogFlow.SessionsClient();
+        this.sessionPath = this.sessionClient.projectAgentSessionPath(process.env.DIALOG_FLOW_PROJECT_ID, sessionId);
+    }
 
-        // Create a new session
-        const sessionClient = new DialogFlow.SessionsClient();
-        const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
-
-        // The text query request.
+    async detectIntent(message){
         const request = {
-            session: sessionPath,
+            session: this.sessionPath,
             queryInput: {
-            text: {
-                // The query to send to the dialogflow agent
-                text: message.body, 
-                // The language used by the client (en-US)
-                languageCode: 'pt-br',
-            },
+                text: {
+                    text: message.body, 
+                    languageCode: 'pt-br',
+                },
             },
         };
-
-        // Send request and log result
-        const responses = await sessionClient.detectIntent(request);
+        
+        const responses = await this.sessionClient.detectIntent(request);
         const result = responses[0].queryResult;
-        console.log(JSON.stringify(result));
-        return result.fulfillmentMessages;
+        return result;
     }
 }
 

@@ -5,14 +5,16 @@
   "description": "",
   "main": "src/server.js",
   "scripts": {
-    "start": "nodemon --ignore tokens/*.* src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon --ignore tokens/*.* --inspect src/server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google-cloud/dialogflow": "^3.4.0",
+    "axios": "^0.21.1",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "sharp": "^0.28.0",
     "venom-bot": "^3.0.12"
   },
   "devDependencies": {

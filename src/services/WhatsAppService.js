@@ -1,15 +1,18 @@
 import venom from 'venom-bot';
 import DialogFlowService from './DialogFlowService.js';
-
+import VTEXService from './VTEXService.js';
 class WhatsAppService {
     async start(){
         this.client = await venom.create();
         this.client.onMessage(async (message) => {
             if (message.isGroupMsg === false) {
-                const messagesResponse = await DialogFlowService.detectedIntent(message);
+                await DialogFlowService.start(message.sender.id);
+                const intent = await DialogFlowService.detectIntent(message);
+                
+                const messagesResponse = await this.verifyIntent(intent);
+
                 console.log('Usuário: '+ message.body)
                 for (const item of messagesResponse) {
-                    console.log(item)
                     await this.client.sendText(message.from, item.text.text[0]);
                     console.log('Bot: '+ item.text.text[0])
                 }
@@ -17,9 +20,47 @@ class WhatsAppService {
         });
     }
 
-    async sendMessage(){
+    async verifyIntent(intent){
+        let messageReturn = '';
+        switch (intent.action) {
+            case 'welcome.welcome-next.Compras-yes':
+                messageReturn = await this.buyStage(intent);
+                break;
         
+            default:
+                messageReturn = intent.fulfillmentMessages;
+                break;
+        }
+
+        return messageReturn;
     }
+
+    async buyStage(intent) {
+        const product_name = intent.parameters.fields.product_name.stringValue;
+        const product_category = intent.parameters.fields.product_category.stringValue;
+
+        if(product_name !== '' && product_category === ''){
+            VTEXService.start();
+            const result = await VTEXService.searchCategoriesByProduct(product_name);
+
+            await DialogFlowService.detectIntent({body: JSON.stringify(result)});
+
+            let messageReturn = 'Em qual categoria você acha que seu produto se encaixa? \n';
+            if(result.length > 1){
+                result.map((item, index) => {
+                    messageReturn += `${index + 1} - ${item} \n`;
+                });
+                messageReturn += 'Digite o *NÚMERO* da categoria';
+                return [{text: {text: [messageReturn]}}];
+            } else {
+                const intent = await DialogFlowService.detectIntent({body: '1'});
+                return intent.fulfillmentMessages;
+            }
+        } else {
+            return intent.fulfillmentMessages;
+        }
+    }
+    
 }
 
 export default new WhatsAppService();

@@ -9,7 +9,8 @@
             "request": "attach",
             "name": "Launch Program",
             "restart": true,
-            "protocol": "inspector"
-            }
+            "protocol": "inspector",
+            "port": 9229
+        }
     ]
 }
