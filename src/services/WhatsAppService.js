@@ -9,7 +9,7 @@ class WhatsAppService {
             if (message.isGroupMsg === false) {
                 await DialogFlowService.start(message.sender.id);
                 const intent = await DialogFlowService.detectIntent(message);
-                console.log(intent);
+                // console.log(intent);
                 const messagesResponse = await this.verifyIntent(intent);
 
                 console.log('Usuário: '+ message.body)
@@ -38,10 +38,17 @@ class WhatsAppService {
 
     async buyStage(intent) {
         const product_name = intent.parameters.fields.product_name.stringValue;
-        const product_index = intent.parameters.fields.product_index.numberValue;
+        let value = intent.parameters.fields.product_index.stringValue;
+        if(intent.parameters.fields.product_index.numberValue != undefined) {
+            value = intent.parameters.fields.product_index.numberValue;
+        }
+        const product_index = value;
         const product_list = intent.parameters.fields.product_list.stringValue;
-
-        if(product_name !== '' && product_list === '' && product_index !== undefined){
+        const product_sku = intent.parameters.fields.product_sku.stringValue;
+        console.log('verificacao');
+        console.log(product_name !== '' && product_list === '' && product_index === '' && product_sku === '')
+        if(product_name !== '' && product_list === '' && product_index === '' && product_sku === ''){
+            console.log(2)
             VTEXService.start();
             const result = await VTEXService.searchItemsByProduct(product_name);
             console.log(result);
@@ -64,14 +71,29 @@ class WhatsAppService {
                 messageReturn += '\nDigite o *NÚMERO* do produto para colocar no carrinho';
                 return [{text: {text: [messageReturn]}}];
             } else {
+                console.log('automatico')
                 const intent = await DialogFlowService.detectIntent({body: '1'});
-                return intent.fulfillmentMessages;
+                let value = intent.parameters.fields.product_index.stringValue;
+                if(intent.parameters.fields.product_index.numberValue != undefined) {
+                    value = intent.parameters.fields.product_index.numberValue;
+                }
+                const product_index = value;
+                const product_list = intent.parameters.fields.product_list.stringValue;
+
+                const product_sku = JSON.parse(product_list)[product_index - 1];
+                await DialogFlowService.detectIntent({body: JSON.stringify(product_sku)});
+
+                return [{text: {text: ['Produto adicionado ao carrinho!', ]}}, {text: {text: [`Caso queira adicionar mais produtos digite *Continuar*, caso contrário e deseje finalizar seu pedido, por questões de segurança segue o link para finalizar seu pedido em nossa plataforma: ${'http://cosmetics2.myvtex.com/checkout/cart/add?sc=1&sku='+product_sku+'&qty=1&seller=1'}`]}}];
+                // return intent.fulfillmentMessages;
             }
-        } else if(product_name !== '' && product_index !== undefined && product_index !== ''){
+        } else if(product_name !== '' && (product_index !== undefined || product_index !== '') && product_list !== '' && product_sku === ''){
+            console.log(2)
             const product_sku = JSON.parse(product_list)[product_index - 1];
             await DialogFlowService.detectIntent({body: JSON.stringify(product_sku)});
             return [{text: {text: ['Produto adicionado ao carrinho!', ]}}, {text: {text: [`Caso queira adicionar mais produtos digite *Continuar*, caso contrário e deseje finalizar seu pedido, por questões de segurança segue o link para finalizar seu pedido em nossa plataforma: ${'http://cosmetics2.myvtex.com/checkout/cart/add?sc=1&sku='+product_sku+'&qty=1&seller=1'}`]}}];
         } else {
+            console.log(3)
+            console.log(intent.parameters.fields)
             return intent.fulfillmentMessages;
         }
     }
