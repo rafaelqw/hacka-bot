@@ -1,5 +1,5 @@
 import venom from 'venom-bot';
-import lodash from 'lodash';
+import _ from 'lodash';
 import DialogFlowService from './DialogFlowService.js';
 import VTEXService from './VTEXService.js';
 class WhatsAppService {
@@ -9,7 +9,7 @@ class WhatsAppService {
             if (message.isGroupMsg === false) {
                 await DialogFlowService.start(message.sender.id);
                 const intent = await DialogFlowService.detectIntent(message);
-                
+                console.log(intent);
                 const messagesResponse = await this.verifyIntent(intent);
 
                 console.log('Usuário: '+ message.body)
@@ -38,46 +38,51 @@ class WhatsAppService {
 
     async buyStage(intent) {
         const product_name = intent.parameters.fields.product_name.stringValue;
-        const product_category = intent.parameters.fields.product_category.stringValue;
+        const product_index = intent.parameters.fields.product_index.numberValue;
+        const product_list = intent.parameters.fields.product_list.stringValue;
 
-        if(product_name !== '' && product_category === ''){
+        if(product_name !== '' && product_list === '' && product_index !== undefined){
             VTEXService.start();
-            const result = await VTEXService.searchCategoriesByProduct(product_name);
+            const result = await VTEXService.searchItemsByProduct(product_name);
             console.log(result);
-            await DialogFlowService.detectIntent({body: JSON.stringify(result)});
+            if(result){
+                const dfMessage = [];
+                result.map(item => {
+                    dfMessage.push(item.sku);
+                });
 
-            let messageReturn = 'Em qual categoria você acha que seu produto se encaixa? \n';
+                await DialogFlowService.detectIntent({body: JSON.stringify(dfMessage)});
+            } else {
+                return [{text: {text: ['Infelizmente não encontramos seu produto']}}];
+            }
+
+            let messageReturn = 'Encontramos os seguintes produtos: \n\n';
             if(result.length > 1){
                 result.map((item, index) => {
-                    messageReturn += `${index + 1} - ${item} \n`;
+                    messageReturn += `${index + 1} - ${item.name} \n`;
                 });
-                messageReturn += 'Digite o *NÚMERO* da categoria';
+                messageReturn += '\nDigite o *NÚMERO* do produto para colocar no carrinho';
                 return [{text: {text: [messageReturn]}}];
             } else {
                 const intent = await DialogFlowService.detectIntent({body: '1'});
                 return intent.fulfillmentMessages;
             }
-        } else if (this.verifyProductComplete(intent)) {
-            
-            return intent.fulfillmentMessages;
-        }
-        else {
+        } else if(product_name !== '' && product_index !== undefined && product_index !== ''){
+            const product_sku = JSON.parse(product_list)[product_index - 1];
+            await DialogFlowService.detectIntent({body: JSON.stringify(product_sku)});
+            return [{text: {text: ['Produto adicionado ao carrinho!', ]}}, {text: {text: [`Caso queira adicionar mais produtos digite *Continuar*, caso contrário e deseje finalizar seu pedido, por questões de segurança segue o link para finalizar seu pedido em nossa plataforma: ${'http://cosmetics2.myvtex.com/checkout/cart/add?sc=1&sku='+product_sku+'&qty=1&seller=1'}`]}}];
+        } else {
             return intent.fulfillmentMessages;
         }
     }
 
     verifyProductComplete(intent) {
         let complete = true;
-        lodash.map(intent.parameters.fields, (field) => {
+        _.map(intent.parameters.fields, (field) => {
             if(field.stringValue === ''){
                 complete = false;
             }
-        })
-        // for (const field of intent.parameters.fields) {
-        //     if(field.stringValue === ''){
-        //         complete = false;
-        //     }
-        // }
+        });
 
         return complete;
     }

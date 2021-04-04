@@ -31,6 +31,23 @@ class VTEXService {
 
         return false;
     }
+
+    async searchItemsByProduct(productName){
+        const response = await this.vtexApiURL.get(`/catalog_system/pub/products/search/${productName}`);
+        
+        if(response.data.length > 0){
+            let items = [];
+            response.data.map(item => {
+                item.items.map(x => {
+                    items.push({sku: x.itemId, name: x.nameComplete})
+                });
+            });
+
+            return items;
+        }
+
+        return false;
+    }
 }
 
 export default new VTEXService();
