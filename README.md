@@ -2,12 +2,6 @@
 
 <p align="center"> ChatBot de vendas via whatsapp integrado ao OMS da VTEX </p>
 
-### Tópicos
-- [Descrição do projeto]("#descricao")
-- [Funcionalidades]("#funcionalidades")
-- [Tecnologias utilizadas]("#tecnologias")
-- [Como rodar a aplicação]("#comorodar")
-
 ## Descrição do projeto
 <p align="justify" name="descricao">
   O projeto tem como objetivo criar engajamento para os clientes que utilizam canais sociais como a ferramenta de conversa Whatsapp. Para isso, construímos um chatbot onde através da interação do cliente, é possível selecionar produtos e assim, utilizando da metodologia omnichannel, ser direcionado para a plataforma, podendo realizar o pagamento de forma rápida e fácil. O próprio chatbot consegue conceder cupons de desconto para os clientes utilizarem no momento do pagamento.
